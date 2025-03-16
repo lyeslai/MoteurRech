@@ -1,35 +1,45 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState } from "react";
+import axios from "axios";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [query, setQuery] = useState<string>("");
+  const [mode, setMode] = useState<string>("kmp");
+  const [books, setBooks] = useState<{ _id: string; title: string; author: string }[]>([]);
+
+  const handleSearch = () => {
+    console.log("🔍 Recherche envoyée avec:", query, mode);
+    axios.get(`http://localhost:3000/api/books/search?query=${query}&mode=${mode}`)
+      .then(response => {
+        console.log("✅ Résultats reçus:", response.data);
+        setBooks(response.data);
+      })
+      .catch(error => console.error("❌ Erreur API:", error));
+  };
+  
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div>
+      <h1>📚 Recherche de Livres</h1>
+      <input
+        type="text"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder="Rechercher..."
+      />
+      <select onChange={(e) => setMode(e.target.value)}>
+        <option value="kmp">KMP</option>
+        <option value="regex">RegEx</option>
+      </select>
+      <button onClick={handleSearch}>Rechercher</button>
+      <ul>
+        {books.map(book => (
+          <li key={book._id}>
+            <strong>{book.title}</strong> - {book.author}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
 }
 
-export default App
+export default App;

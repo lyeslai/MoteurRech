@@ -1,27 +1,21 @@
+require("dotenv").config();
+const express = require("express");
+const mongoose = require("mongoose");
+const cors = require("cors");
+const booksRoutes = require("./routes/books");
 
-require('dotenv').config();
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const app = express();
+app.use(express.json());
+app.use(cors());
 
-const uri = process.env.MONGODB_URI;
-const client = new MongoClient(uri, {
-  serverApi: {
-    version: ServerApiVersion.v1,
-    strict: true,
-    deprecationErrors: true,
-  }
-});
+// Connexion à MongoDB
+mongoose.connect(process.env.MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+}).then(() => console.log("MongoDB connecté"))
+  .catch(err => console.error("Erreur MongoDB:", err));
 
-async function run() {
-  try {
-    await client.connect();
-    await client.db("admin").command({ ping: 1 });
-    console.log("Connecté à MongoDB Atlas !");
-  } catch (err) {
-    console.error("Erreur de connexion MongoDB :", err);
-  } finally {
-    await client.close();
-  }
-  
-}
+app.use("/api/books", booksRoutes);
 
-run().catch(console.dir);
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`🚀 Serveur démarré sur le port ${PORT}`));
