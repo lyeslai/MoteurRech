@@ -65,7 +65,7 @@ class Book {
 
     wordsWithOccurrences() {
         const wordCounts = {};
-        const words = this.content.toLowerCase().split(/\W+/).filter(word => word.length > 0);
+        const words = this.content.toLowerCase().split(/[^a-zA-Z]+/).filter(word => word.length > 0);
         words.forEach(word => {
             wordCounts[word] = (wordCounts[word] || 0) + 1;
         });
