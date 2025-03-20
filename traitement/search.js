@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const Book = require('./book'); // Assuming Book.js is in the same directory
+const { kmpMatch } = require('./KMP');
 
 /**
  * Splits the pattern into keywords based on the search type.
@@ -11,7 +12,7 @@ const Book = require('./book'); // Assuming Book.js is in the same directory
  */
 function splitPattern(pattern, type) {
     if (type === 'regex') {
-        return pattern.replace(/[(.*|)]/g, ' ').replace(/\s+/g, ' ').split(' ');
+        return [pattern]; // Return the entire pattern as a single keyword for regex search
     } else {
         return pattern.split(/[^\p{L}\p{Nd}]+/u);
     }
@@ -46,7 +47,22 @@ function isKeywordMatch(indexWord, keyword, type) {
 function searchDir(pattern, type, metadata, wordsIndex, bookPaths) {
     const keywords = splitPattern(pattern, type);
 
-    // For each keyword, get all matching entries from the wordsIndex
+    // Handle regex search separately
+    if (type === 'regex') {
+        const regex = new RegExp(pattern, 'i');
+        const matchedBooks = metadata
+            .filter(book => {
+                const bookPath = bookPaths[book.id];
+                if (!bookPath) return false; // Skip if book path is not found
+                const content = fs.readFileSync(`books/${bookPath}`, 'utf8');
+                return regex.test(content);
+            })
+            .map(book => ({ book, occurrence: 1 })); // Set occurrence to 1 for regex matches
+        console.log(`Searching ${matchedBooks.length} books`);
+        return matchedBooks;
+    }
+
+    // For keyword and KMP search, proceed with the existing logic
     const bookMapsForKeywords = keywords.map(keyword => {
         const matchingBooks = new Map();
 
@@ -64,7 +80,7 @@ function searchDir(pattern, type, metadata, wordsIndex, bookPaths) {
     });
 
     // Intersect or union the book maps based on the pattern
-    const booksWithOcc = bookMapsForKeywords.reduce((m1, m2) => {
+    const booksWithTfIdfScore = bookMapsForKeywords.reduce((m1, m2) => {
         const result = new Map();
 
         if (!pattern.includes('|')) {
@@ -86,45 +102,34 @@ function searchDir(pattern, type, metadata, wordsIndex, bookPaths) {
     });
 
     // Convert the map to a list of [bookId, occurrence] pairs
-    const booksWithOccList = Array.from(booksWithOcc.entries());
+    const booksWithTfIdfScoreList = Array.from(booksWithTfIdfScore.entries());
 
-    console.log(`Searching ${booksWithOccList.length} books`);
+    console.log(`Searching ${booksWithTfIdfScoreList.length} books`);
 
-    // Handle different search types
+    // Handle keyword search
     if (type === 'keyword') {
-        return booksWithOccList.map(([bookId, occ]) => {
+        return booksWithTfIdfScoreList.map(([bookId, occ]) => {
             const book = metadata.find(b => b.id === bookId);
             return { book, occurrence: occ };
         });
-    } else if (type === 'regex') {
-        const regex = new RegExp(pattern, 'i');
-        return booksWithOccList
-            .filter(([bookId, occ]) => {
-                const bookPath = bookPaths[bookId]; // Access book path using bracket notation
-                if (!bookPath) return false; // Skip if book path is not found
-                const content = fs.readFileSync(`books/${bookPath}`, 'utf8');
-                return regex.test(content);
-            })
-            .map(([bookId, occ]) => {
-                const book = metadata.find(b => b.id === bookId);
-                return { book, occurrence: occ };
-            });
-    } else if (type === 'kmp') {
-        // KMP search implementation (placeholder)
-        return booksWithOccList
-            .filter(([bookId, occ]) => {
-                const bookPath = bookPaths[bookId]; // Access book path using bracket notation
-                if (!bookPath) return false; // Skip if book path is not found
-                const content = fs.readFileSync(`books/${bookPath}`, 'utf8');
-                return content.includes(pattern); // Simple placeholder for KMP
-            })
-            .map(([bookId, occ]) => {
-                const book = metadata.find(b => b.id === bookId);
-                return { book, occurrence: occ };
-            });
-    } else {
-        throw new Error(`Unsupported search type: ${type}`);
     }
+
+    // Handle KMP search
+    if (type === 'kmp') {
+        return booksWithTfIdfScoreList
+            .filter(([bookId, occ]) => {
+                const bookPath = bookPaths[bookId]; // Access book path using bracket notation
+                if (!bookPath) return false; // Skip if book path is not found
+                const content = fs.readFileSync(`books/${bookPath}`, 'utf8');
+                return kmpMatch(pattern.toLowerCase(), content.toLowerCase()) !== -1;
+            })
+            .map(([bookId, occ]) => {
+                const book = metadata.find(b => b.id === bookId);
+                return { book, occurrence: occ };
+            });
+    }
+
+    throw new Error(`Unsupported search type: ${type}`);
 }
 
 module.exports = searchDir;

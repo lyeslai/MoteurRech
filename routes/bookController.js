@@ -1,10 +1,10 @@
 const fs = require("fs");
 const path = require("path");
 const express = require("express");
-const searchDir = require('./search'); // Import the searchDir function
-const { parse } = require("./book");
-const { parseMetadata, parseIndex, parseBookPaths } = require("./parseIndex");
-const { parseCentrality, parseMatrix } = require("./Jaccard")
+const searchDir = require('../traitement/search'); // Import the searchDir function
+const { parse } = require("../traitement/book");
+const { parseMetadata, parseIndex, parseBookPaths } = require("../traitement/parseIndex");
+const { parseCentrality, parseMatrix } = require("../traitement/Jaccard")
 
 const router = express.Router();
 
@@ -77,6 +77,10 @@ router.post("/search-books", (req, res) => {
     }
 
     const matchedBooks = searchDir(pattern, type, BookData.metadata, BookData.wordsIndex, BookData.bookPaths);
+    if (matchedBooks.length === 0) {
+        return res.status(404).json({ error: "No books found." });
+    }
+
     res.json(matchedBooks.map(({ book, occurrence }) => bookJson(book, occurrence)));
 });
 
