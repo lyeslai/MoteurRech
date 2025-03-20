@@ -81,9 +81,10 @@ function parseIndexCLI() {
     const start = Date.now();
     console.log(Object.keys(index).filter(k => k.includes("re")));
     console.log(`Time: ${Date.now() - start}ms`);
+    Book.processBooks("books", "traitement/books.csv");
 }
 
 // Run test
-//! parseIndexCLI();
+// !parseIndexCLI();
 
 module.exports = { parseIndex, parseBookPaths, parseMetadata };

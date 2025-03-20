@@ -192,7 +192,6 @@ async function main() {
 
     const matrix = jaccardMatrix(bookIds, words);
     console.log("------------MATRIX------------");
-    console.log(bookIds);
     printMatrix(matrix);
     writeMatrix(bookIds, matrix);
 
@@ -204,6 +203,6 @@ async function main() {
 }
 
 // Run the main function
-!main().catch(console.error);
+// !main().catch(console.error);
 
 module.exports = { parseCentrality, parseMatrix, jaccardMatrix };

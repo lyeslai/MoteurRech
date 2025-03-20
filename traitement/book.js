@@ -20,29 +20,52 @@ class Book {
         let id = 0;
 
         let i = 0;
-        while (!lines[i].startsWith("*** START OF THE PROJECT GUTENBERG EBOOK") && !lines[i].startsWith("*** START OF THIS PROJECT GUTENBERG EBOOK")) {
-            if (lines[i].toLowerCase().startsWith("title: ")) {
-                title = lines[i].substring("Title: ".length).trim();
-            } else if (lines[i].toLowerCase().startsWith("author: ")) {
-                author = lines[i].substring("Author: ".length).trim();
-            } else if (lines[i].toLowerCase().startsWith("release date: ")) {
-                releaseDate = lines[i].substring("Release Date: ".length).split('[')[0].trim();
-                if (lines[i].includes('[')) {
-                    id = parseInt(lines[i].match(/#(\d+)/)[1]);
+        while (i < lines.length && !lines[i].startsWith("*** START OF THE PROJECT GUTENBERG EBOOK") && !lines[i].startsWith("*** START OF THIS PROJECT GUTENBERG EBOOK")) {
+            const line = lines[i].trim();
+
+            if (line.toLowerCase().startsWith("title: ")) {
+                title = line.substring("Title: ".length).trim();
+            } else if (line.toLowerCase().startsWith("author: ")) {
+                author = line.substring("Author: ".length).trim();
+            } else if (line.toLowerCase().startsWith("release date: ")) {
+                releaseDate = line.substring("Release Date: ".length).split('[')[0].trim();
+                // Extract ID from the release date line if it exists
+                const idMatch = line.match(/#(\d+)/);
+                if (idMatch) {
+                    id = parseInt(idMatch[1], 10);
                 }
             }
             i++;
         }
 
-        const text = lines.slice(i).join('\n').split("*** END OF THIS PROJECT GUTENBERG EBOOK")[0].split("*** END OF THE PROJECT GUTENBERG EBOOK")[0].trim();
+        // Extract ID from the START line if not found earlier
+        if (id === 0 && i < lines.length) {
+            const startLine = lines[i].trim();
+            const startIdMatch = startLine.match(/(\d+)\s*\*\*\*$/);
 
-        return new Book(id, title, author, releaseDate, text);
+            if (startIdMatch) {
+                id = parseInt(startIdMatch[1], 10);
+            }
+        }
+
+        // Extract the content
+        const content = lines
+            .slice(i)
+            .join('\n')
+            .split("*** END OF THIS PROJECT GUTENBERG EBOOK")[0]
+            .split("*** END OF THE PROJECT GUTENBERG EBOOK")[0]
+            .trim();
+
+        return new Book(id, title, author, releaseDate, content);
     }
+
 
     static async processBooks(directory, outputCsv) {
         const files = fs.readdirSync(directory).filter(file => file.endsWith('.txt'));
+        let count = 0;
         const books = files.map(file => {
             try {
+                count++;
                 return Book.parse(path.join(directory, file));
             } catch (e) {
                 console.error(`Error parsing ${file}: ${e.message}`);
@@ -51,7 +74,7 @@ class Book {
         }).filter(book => book !== null);
 
         Book.saveToCsv(books, outputCsv);
-        console.log(`✅ Books processed and saved to ${outputCsv}`);
+        console.log(`✅ ${count} Books processed and saved to ${outputCsv}`);
     }
 
     static saveToCsv(books, outputFile) {
@@ -67,6 +90,8 @@ class Book {
         const wordCounts = {};
         const words = this.content.toLowerCase().split(/[^a-zA-Z]+/).filter(word => word.length > 0);
         words.forEach(word => {
+            if (word === 'constructor')
+                return;
             wordCounts[word] = (wordCounts[word] || 0) + 1;
         });
         return wordCounts;

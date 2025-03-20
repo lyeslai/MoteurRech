@@ -161,4 +161,4 @@ async function main() {
     console.log("✅ Indexing complete with normalized TF-IDF.");
 }
 
-main().catch(console.error);
+// main().catch(console.error);
