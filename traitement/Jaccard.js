@@ -106,7 +106,8 @@ function closenessCentrality(matrix) {
 
     for (let i = 0; i < size; i++) {
         const sum = matrix[i].reduce((acc, val) => acc + val, 0);
-        centrality[i] = sum === 0 ? 0 : (size - 1) / sum;
+        // Normalize by dividing by (size - 1)
+        centrality[i] = sum === 0 ? 0 : (size - 1) / (sum * (size - 1));
     }
 
     return centrality;
@@ -203,6 +204,6 @@ async function main() {
 }
 
 // Run the main function
-//! main().catch(console.error);
+!main().catch(console.error);
 
 module.exports = { parseCentrality, parseMatrix, jaccardMatrix };
