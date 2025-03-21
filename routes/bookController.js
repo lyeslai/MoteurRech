@@ -44,7 +44,7 @@ router.get("/book/:bookId", (req, res) => {
     const filePath = BookData.bookPaths[bookId];
 
     console.log(`Checking file: ${filePath}`);
-    const fileExists = filePath && fs.existsSync(filePath);
+    const fileExists = filePath && fs.existsSync(path.join('books', filePath));
     console.log(`File exists? ${fileExists}`);
 
     const bookDetails = BookData.metadata.find((b) => b.id === bookId);
@@ -55,7 +55,7 @@ router.get("/book/:bookId", (req, res) => {
             title: bookDetails.title,
             author: bookDetails.author,
             releaseDate: bookDetails.releaseDate,
-            content: fileExists ? parse(filePath).content : "Not found",
+            content: fileExists ? parse(path.join('books', filePath)).content : "Not found",
         });
     } else {
         res.json({
