@@ -21,31 +21,17 @@ body {
     width: 100%;
 }
 
-/* Flip animation for the right page */
-@keyframes flipRight {
-    0% {
-        transform: perspective(1200px) rotateY(0deg);
-    }
-    100% {
-        transform: perspective(1200px) rotateY(180deg);
-    }
+.book {
+    position: relative;
+    perspective: 1500px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-/* Flip animation for the left page */
-@keyframes flipLeft {
-    0% {
-        transform: perspective(1200px) rotateY(0deg);
-    }
-    100% {
-        transform: perspective(1200px) rotateY(-180deg);
-    }
-}
-
-/* Apply animations */
-.flip-page-right {
-    animation: flipRight 0.8s ease-out backwards;
-}
-
-.flip-page-left {
-    animation: flipLeft 0.8s ease-out backwards;
+.page {
+    width: 100%;
+    height: 100%;
+    background-color: #faf4e8;
+    padding: 20px;
+    box-sizing: border-box;
+    border: 1px solid #d4c8b8;
 }
