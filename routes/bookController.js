@@ -121,7 +121,7 @@ router.get('/recommendations/:bookId', (req, res) => {
             centrality: BookData.centrality[id] || 0,
         }))
         .sort((a, b) => a.distance - b.distance || b.centrality - a.centrality) // Sort by distance and centrality
-        .slice(0, 6) // Take the top 6 recommendations
+        .slice(0, 3) // Take the top 3 recommendations
         .filter(rec => rec.distance > 0.0) // Filter out the book itself
         .map(rec => BookData.metadata.find(b => b.id === rec.id)); // Map to book metadata
 

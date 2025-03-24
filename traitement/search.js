@@ -64,7 +64,7 @@ function searchDir(pattern, type, metadata, wordsIndex, bookPaths) {
 
     // For keyword and KMP search, proceed with the existing logic
     const bookMapsForKeywords = keywords.map(keyword => {
-        const matchingBooks = new Map();
+        let matchingBooks = new Map();
 
         // Iterate over the wordsIndex object
         Object.entries(wordsIndex).forEach(([indexWord, bookMap]) => {
@@ -75,6 +75,8 @@ function searchDir(pattern, type, metadata, wordsIndex, bookPaths) {
                 });
             }
         });
+        // sort the matching books by occurrence
+        matchingBooks = new Map([...matchingBooks.entries()].sort((a, b) => b[1] - a[1]));
 
         return matchingBooks;
     });
