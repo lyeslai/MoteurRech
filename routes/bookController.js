@@ -28,7 +28,7 @@ const bookJson = (book, occurrence = 0) => ({
     title: book.title,
     author: book.author,
     releaseDate: book.releaseDate,
-    relevance: BookData.centrality[book.id] || 0,
+    relevance: BookData.centrality.find(([idCent, _]) => idCent === parseInt(book.id, 10))[1] || 0,
     occurrence: occurrence,
 });
 
@@ -118,10 +118,10 @@ router.get('/recommendations/:bookId', (req, res) => {
         .map(([id, distance]) => ({
             id: parseInt(id, 10),
             distance,
-            centrality: BookData.centrality[id] || 0,
+            centrality: (BookData.centrality.find(([idCent, _]) => idCent === parseInt(id, 10)) || [0, 0])[1],
         }))
         .sort((a, b) => a.distance - b.distance || b.centrality - a.centrality) // Sort by distance and centrality
-        .slice(0, 3) // Take the top 3 recommendations
+        .slice(0, 6) // Take the top 6 recommendations
         .filter(rec => rec.distance > 0.0) // Filter out the book itself
         .map(rec => BookData.metadata.find(b => b.id === rec.id)); // Map to book metadata
 

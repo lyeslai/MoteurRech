@@ -40,6 +40,7 @@ const App: React.FC = () => {
                 <BookList
                   books={searchResults.length > 0 ? searchResults : books}
                   onBookClick={(id) => (window.location.href = `/book/${id}`)}
+                  displaySort={true}
                 />
                 {/* <RandomBooks books={randomBooks} /> */}
               </div>

@@ -69,46 +69,52 @@ const BookReader: React.FC<BookReaderProps> = ({ book }) => {
     };
 
     return (
-        <div className="flex flex-col md:flex-row items-center justify-center w-full max-w-none mx-auto relative overflow-hidden bg-amber-200 p-4 md:p-6">
-            {/* Previous Page Button */}
-            <button
-                onClick={goToPreviousPage}
-                disabled={currentPage === 0}
-                className="bg-[#6d4c41] text-white px-4 py-2 rounded-lg hover:bg-[#5a3c32] transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed mb-4 md:mb-0 md:mr-4"
-            >
-                ←
-            </button>
+        <div className="flex flex-col justify-center items-start bg-gray-600 p-4 md:p-6">
+            <div className="container text-start">
+                <h1 className="text-2xl md:text-4xl font-bold text-center mb-4">{book.title}</h1>
+            </div>
+            <div className="flex flex-col md:flex-row items-center justify-center w-full max-w-none mx-auto relative overflow-hidden">
 
-            {/* Book Container */}
-            <HTMLFlipBook
-                ref={flipBookRef}
-                width={isMobile ? 300 : 600} // Dynamic width based on screen size
-                height={isMobile ? 500 : 800} // Dynamic height based on screen size
-                size="fixed" // Fixed size
-                maxShadowOpacity={0.5} // Shadow intensity
-                showCover={false} // Don't show a cover page
-                flippingTime={500} // Animation duration in milliseconds
-                mobileScrollSupport={false} // Disable mobile scroll to prevent conflicts
-                onFlip={onFlip} // Handle page flip event
-                className="book"
-            >
-                {pages.map((page, index) => (
-                    <div key={index} className="page">
-                        <pre className="font-serif text-sm md:text-base leading-relaxed max-w-[90%] mx-auto !p-1 md:p-8">
-                            {page}
-                        </pre>
-                    </div>
-                ))}
-            </HTMLFlipBook>
+                {/* Previous Page Button */}
+                <button
+                    onClick={goToPreviousPage}
+                    disabled={currentPage === 0}
+                    className="bg-[#6d4c41] text-white px-4 py-2 rounded-lg hover:bg-[#5a3c32] transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed mb-4 md:mb-0 md:mr-4"
+                >
+                    ←
+                </button>
 
-            {/* Next Page Button */}
-            <button
-                onClick={goToNextPage}
-                disabled={currentPage >= pages.length - 1}
-                className="bg-[#6d4c41] text-white px-4 py-2 rounded-lg hover:bg-[#5a3c32] transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed mt-4 md:mt-0 md:ml-4"
-            >
-                →
-            </button>
+                {/* Book Container */}
+                <HTMLFlipBook
+                    ref={flipBookRef}
+                    width={isMobile ? 300 : 600} // Dynamic width based on screen size
+                    height={isMobile ? 500 : 800} // Dynamic height based on screen size
+                    size="fixed" // Fixed size
+                    maxShadowOpacity={0.5} // Shadow intensity
+                    showCover={false} // Don't show a cover page
+                    flippingTime={500} // Animation duration in milliseconds
+                    mobileScrollSupport={false} // Disable mobile scroll to prevent conflicts
+                    onFlip={onFlip} // Handle page flip event
+                    className="book rounded-lg"
+                >
+                    {pages.map((page, index) => (
+                        <div key={index} className="page">
+                            <pre className="font-serif text-sm md:text-base leading-relaxed max-w-[90%] mx-auto !p-1 md:p-8">
+                                {page}
+                            </pre>
+                        </div>
+                    ))}
+                </HTMLFlipBook>
+
+                {/* Next Page Button */}
+                <button
+                    onClick={goToNextPage}
+                    disabled={currentPage >= pages.length - 1}
+                    className="bg-[#6d4c41] text-white px-4 py-2 rounded-lg hover:bg-[#5a3c32] transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed mt-4 md:mt-0 md:ml-4"
+                >
+                    →
+                </button>
+            </div>
         </div>
     );
 };
