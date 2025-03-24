@@ -28,11 +28,12 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
     };
 
     return (
-        <div className="mb-8">
+        <div className="min-w-full">
             <div className="flex gap-4 mb-4">
                 <input
                     type="text"
                     placeholder="Enter search pattern"
+                    style={{ color: "white" }}
                     value={pattern}
                     onChange={(e) => {
                         const newPattern = e.target.value;
@@ -48,7 +49,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
                         setType(newType);
                         handleSearch(pattern, newType);
                     }}
-                    className="p-2 border border-gray-300 rounded-lg"
+                    className="p-2 border border-gray-300 rounded-lg text-white"
                 >
                     <option value="keyword">Keyword</option>
                     <option value="regex">Regex</option>
