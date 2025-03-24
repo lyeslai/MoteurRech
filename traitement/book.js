@@ -52,7 +52,7 @@ class Book {
         }
 
         // Second pass: If metadata is missing, look for it after the START line
-        if (!title || !author || !releaseDate) {
+        if (!title && !author && !releaseDate) {
             // Look for metadata after the START line
             let j = i + 1; // Start searching after the START line
             let isTitleFound = false;
