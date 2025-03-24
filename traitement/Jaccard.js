@@ -135,7 +135,10 @@ async function parseCentrality() {
     const [header, ...lines] = content.split("\n");
     const bookIds = header.split(";").map(Number);
     const centrality = lines[0].split(";").map(Number);
-    return bookIds.map((id, i) => [id, centrality[i]]);
+
+    const result = bookIds.map((id, i) => [id, centrality[i]]);
+
+    return result;
 }
 
 async function parseMatrix() {
