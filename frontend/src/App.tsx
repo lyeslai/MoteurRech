@@ -4,7 +4,6 @@ import axios from "axios";
 import BookList from "./components/BookList";
 import SearchBar from "./components/SearchBar";
 // import Recommendations from "./components/Recommendations";
-import RandomBooks from "./components/RandomBooks";
 import { Book, SearchResult } from "./types";
 // import BookCard from "./components/BookCard";
 import BookDetails from "./components/BookDetails";
@@ -12,42 +11,38 @@ import BookDetails from "./components/BookDetails";
 const App: React.FC = () => {
   const [books, setBooks] = useState<Book[]>([]);
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
-  const [randomBooks, setRandomBooks] = useState<Book[]>([]);
 
   useEffect(() => {
     // Fetch all books
     axios.get<Book[]>("http://localhost:3000/api/books/books")
       .then((response) => setBooks(response.data))
       .catch((error) => console.error("Error fetching books:", error));
-
-    // Fetch random books
-    axios.get<Book[]>("http://localhost:3000/api/books/random-books")
-      .then((response) => setRandomBooks(response.data))
-      .catch((error) => console.error("Error fetching random books:", error));
   }, []);
 
   const handleSearch = (results: SearchResult[]) => {
     setSearchResults(results);
-    console.log(results);
-
   };
 
   return (
     <Router>
-      <div className="container mx-auto p-4">
-        <h1 className="text-3xl font-bold mb-8">Book Search App</h1>
-        <SearchBar onSearch={handleSearch} />
+      <div className="mx-auto flex flex-col items-center">
+        <div className="min-w-full bg-gray-800 p-4 mb-8">
+          <div className="px-44 flex flex-col justify-center items-center">
+            <h1 className="text-3xl text-white font-bold mb-8 cursor-pointer" onClick={() => window.location.href = '/'}>Book Search App</h1>
+            <SearchBar onSearch={handleSearch} />
+          </div>
+        </div>
         <Routes>
           <Route
             path="/"
             element={
-              <>
+              <div className="container   ">
                 <BookList
                   books={searchResults.length > 0 ? searchResults : books}
                   onBookClick={(id) => (window.location.href = `/book/${id}`)}
                 />
-                <RandomBooks books={randomBooks} />
-              </>
+                {/* <RandomBooks books={randomBooks} /> */}
+              </div>
             }
           />
           <Route path="/book/:bookId" element={<BookDetailsWrapper />} />

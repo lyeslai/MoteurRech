@@ -9,7 +9,7 @@ interface BookListProps {
 
 const BookList: React.FC<BookListProps> = ({ books, onBookClick }) => {
     return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
+        <div className="min-w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {books.map((book) => {
                 if ("id" in book) {
                     return (
