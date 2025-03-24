@@ -20,6 +20,7 @@ class Book {
         let id = 0;
 
         let i = 0;
+        // First pass: Look for metadata before the START line
         while (i < lines.length && !lines[i].startsWith("*** START OF THE PROJECT GUTENBERG EBOOK") && !lines[i].startsWith("*** START OF THIS PROJECT GUTENBERG EBOOK")) {
             const line = lines[i].trim();
 
@@ -27,6 +28,8 @@ class Book {
                 title = line.substring("Title: ".length).trim();
             } else if (line.toLowerCase().startsWith("author: ")) {
                 author = line.substring("Author: ".length).trim();
+            } else if (line.toLowerCase().startsWith("by ")) {
+                author = line.substring("By ".length).trim();
             } else if (line.toLowerCase().startsWith("release date: ")) {
                 releaseDate = line.substring("Release Date: ".length).split('[')[0].trim();
                 // Extract ID from the release date line if it exists
@@ -45,6 +48,39 @@ class Book {
 
             if (startIdMatch) {
                 id = parseInt(startIdMatch[1], 10);
+            }
+        }
+
+        // Second pass: If metadata is missing, look for it after the START line
+        if (!title || !author || !releaseDate) {
+            // Look for metadata after the START line
+            let j = i + 1; // Start searching after the START line
+            let isTitleFound = false;
+
+            while (j < lines.length && !lines[j].startsWith("Contents")) {
+                const line = lines[j].trim();
+
+                // Skip empty lines, irrelevant metadata, and illustration markers
+                if (line.length === 0 || line.startsWith('There are') || line.startsWith('cover') || line.startsWith('Click on') || line.startsWith('[Illustration]')) {
+                    j++;
+                    continue;
+                }
+
+                // If the title is missing, assume the first non-skipped line is the title
+                if (!title && line.length > 0) {
+                    title = line;
+                    isTitleFound = true;
+                } else if (line.toLowerCase().startsWith("by ")) {
+                    author = line.substring("By ".length).trim();
+                } else if (line.toLowerCase().startsWith("copyright ")) {
+                    releaseDate = line.substring("copyright ".length).split('[')[0].trim();
+                    // Extract ID from the release date line if it exists
+                    const idMatch = line.match(/#(\d+)/);
+                    if (idMatch) {
+                        id = parseInt(idMatch[1], 10);
+                    }
+                }
+                j++;
             }
         }
 
