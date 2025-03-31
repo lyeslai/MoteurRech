@@ -41,10 +41,11 @@ router.get("/books", (req, res) => {
 // Get content of a specific book
 router.get("/book/:bookId", (req, res) => {
     const bookId = parseInt(req.params.bookId, 10);
-    const filePath = BookData.bookPaths[bookId];
+    let filePath = BookData.bookPaths[bookId];
+    const cleanFilePath = filePath.replace(/[\r\n\t]/g, '').trim();
 
     console.log(`Checking file: ${filePath}`);
-    const fileExists = filePath && fs.existsSync(path.join('books', filePath));
+    const fileExists = filePath && fs.existsSync(path.join('books', cleanFilePath));
     console.log(`File exists? ${fileExists}`);
 
     const bookDetails = BookData.metadata.find((b) => b.id === bookId);
