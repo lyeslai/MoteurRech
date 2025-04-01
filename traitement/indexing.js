@@ -139,13 +139,18 @@ async function indexLibrary(directory) {
     const bookFiles = fs.readdirSync(directory).filter(file => file.endsWith(".txt"));
     const index = new Index();
     const directoryMap = {};
+    const totalBooks = bookFiles.length;
+    let processedBooks = 0;
+
+    console.log(`Found ${totalBooks} books to index.`);
 
     for (const file of bookFiles) {
         try {
             const book = Book.parse(path.join(directory, file));
-            console.log(`Processing ${book.id}...`);
+            console.log(`Processing book number ${processedBooks + 1} with ID: ${book.id}...`);
             directoryMap[book.id] = file;
             index.addContent(book.id, book.content);
+            processedBooks++;
         } catch (e) {
             console.error(`Error processing ${file}: ${e.message}`);
         }
@@ -179,4 +184,5 @@ async function main() {
     }
 }
 module.exports = { indexLibrary };
+
 // main().catch(console.error);

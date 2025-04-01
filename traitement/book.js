@@ -102,6 +102,7 @@ class Book {
         const books = files.map(file => {
             try {
                 count++;
+                console.log(`Processing book number ${count}`);
                 return Book.parse(path.join(directory, file));
             } catch (e) {
                 console.error(`Error parsing ${file}: ${e.message}`);

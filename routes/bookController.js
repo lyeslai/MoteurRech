@@ -28,7 +28,7 @@ const bookJson = (book, occurrence = 0) => ({
     title: book.title,
     author: book.author,
     releaseDate: book.releaseDate,
-    relevance: BookData.centrality.find(([idCent, _]) => idCent === parseInt(book.id, 10))[1] || 0,
+    relevance: (BookData.centrality.find(([idCent, _]) => idCent === parseInt(book.id, 10)) || [0, 0])[1],
     occurrence: occurrence,
 });
 

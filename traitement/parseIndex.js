@@ -75,12 +75,12 @@ async function parseMetadata() {
 
 // CLI Test Function (Similar to Scala's `@main def ParseIndex()`)
 function parseIndexCLI() {
-    const index = parseIndex();
-    console.log("[\n\t" + Object.entries(index).slice(0, 10).map(([k, v]) => `${k}: ${JSON.stringify(v)}`).join("\n\t") + "\n]");
+    // const index = parseIndex();
+    // console.log("[\n\t" + Object.entries(index).slice(0, 10).map(([k, v]) => `${k}: ${JSON.stringify(v)}`).join("\n\t") + "\n]");
 
-    const start = Date.now();
-    console.log(Object.keys(index).filter(k => k.includes("re")));
-    console.log(`Time: ${Date.now() - start}ms`);
+    // const start = Date.now();
+    // console.log(Object.keys(index).filter(k => k.includes("re")));
+    // console.log(`Time: ${Date.now() - start}ms`);
     Book.processBooks("books", "traitement/books.csv");
 }
 
