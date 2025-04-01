@@ -1,8 +1,8 @@
 /**
  * indexing.js:
  *
- * Creates an index for words in books using a Trie.
- * Saves index results to files.
+ * Cleaner text preprocessing inspired by your example.
+ * Maintains TF-IDF while producing cleaner terms.
  */
 
 const fs = require("fs");
@@ -13,17 +13,14 @@ const stemmer = natural.PorterStemmer;
 
 class NodeIndex {
     constructor() {
-        this.booksData = {}; // { bookId: count }
+        this.booksData = {}; // { bookId: { count, tfidf } }
         this.children = {}; // { character: NodeIndex }
     }
 
-    /**
-     * Recursively prints the index with word counts
-     */
     printIndexRec(word = "", output = []) {
         if (Object.keys(this.booksData).length > 0) {
             output.push(`${word},${Object.entries(this.booksData)
-                .map(([bookId, count]) => `${bookId}:${count}`)
+                .map(([bookId, data]) => `${bookId}:${data.tfidf.toFixed(10)}`)
                 .join("|")}`);
         }
         for (const [char, node] of Object.entries(this.children)) {
@@ -32,19 +29,13 @@ class NodeIndex {
         return output;
     }
 
-    /**
-     * Adds an occurrence of a word in a book
-     */
     addOneOcc(bookId) {
         if (!this.booksData[bookId]) {
-            this.booksData[bookId] = 0;
+            this.booksData[bookId] = { count: 0, tfidf: 0 };
         }
-        this.booksData[bookId]++;
+        this.booksData[bookId].count++;
     }
 
-    /**
-     * Adds a word to the Trie
-     */
     addWord(bookId, word) {
         let node = this;
         for (const char of word) {
@@ -55,36 +46,89 @@ class NodeIndex {
         }
         node.addOneOcc(bookId);
     }
+
+    calculateTfIdf(totalBooks, docFrequency, bookTermCounts) {
+        for (const [bookId, data] of Object.entries(this.booksData)) {
+            if (bookTermCounts[bookId] === 0 || docFrequency === 0) {
+                data.tfidf = 0;
+                continue;
+            }
+
+            const tf = data.count / bookTermCounts[bookId];
+            const idf = Math.log10(totalBooks / (docFrequency + 1));
+            data.tfidf = tf * idf;
+        }
+
+        for (const child of Object.values(this.children)) {
+            child.calculateTfIdf(totalBooks, docFrequency, bookTermCounts);
+        }
+    }
 }
 
 class Index {
     constructor() {
         this.root = new NodeIndex();
+        this.totalBooks = 0;
+        this.termDocumentFrequency = {};
+        this.bookTermCounts = {};
     }
 
-    /**
-     * Adds a word to the index
-     */
-    addWord(bookId, word) {
-        this.root.addWord(bookId, word);
+    preprocessText(content) {
+        // Simple and effective preprocessing
+        return content.toLowerCase()
+            .split(/[^a-zA-Z]+/)
+            .filter(word => word.length > 1) // Keep only words with 2+ letters
+            .map(word => stemmer.stem(word));
     }
 
-    /**
-     * Adds book content to the index
-     */
     addContent(bookId, content) {
-        // Tokenization: Remove numbers, punctuation, and split into words
-        const words = content.toLowerCase().split(/[^a-zA-Z]+/).filter(Boolean);
+        if (!content) return;
 
+        const words = this.preprocessText(content);
+        const uniqueTerms = new Set(words);
+
+        // Update book term count
+        this.bookTermCounts[bookId] = (this.bookTermCounts[bookId] || 0) + words.length;
+
+        // Add words to index
         for (const word of words) {
-            const stemmedWord = stemmer.stem(word); // Apply stemming
-            this.addWord(bookId, stemmedWord);
+            this.root.addWord(bookId, word);
+        }
+
+        // Update document frequencies
+        for (const term of uniqueTerms) {
+            this.termDocumentFrequency[term] = (this.termDocumentFrequency[term] || 0) + 1;
+        }
+
+        this.totalBooks++;
+    }
+
+    finalizeIndex() {
+        if (this.totalBooks === 0) this.totalBooks = 1;
+
+        const stack = [{ node: this.root, term: '' }];
+
+        while (stack.length > 0) {
+            const { node, term } = stack.pop();
+
+            if (Object.keys(node.booksData).length > 0) {
+                const docFrequency = this.termDocumentFrequency[term] || 1;
+
+                for (const [bookId, data] of Object.entries(node.booksData)) {
+                    const totalTerms = this.bookTermCounts[bookId] || 1;
+                    const tf = data.count / totalTerms;
+                    const idf = Math.log10(this.totalBooks / (docFrequency));
+                    data.tfidf = tf * idf;
+                }
+            }
+
+            Object.entries(node.children)
+                .forEach(([char, childNode]) => {
+                    stack.push({ node: childNode, term: term + char });
+                });
         }
     }
 
-    /**
-     * Prints the index to a file
-     */
     printIndex(outputFile) {
         const output = this.root.printIndexRec();
         fs.writeFileSync(outputFile, output.join("\n"), "utf-8");
@@ -97,12 +141,17 @@ async function indexLibrary(directory) {
     const directoryMap = {};
 
     for (const file of bookFiles) {
-        const book = await Book.parse(path.join(directory, file));
-        console.log(`Processing ${book.id}...`);
-        directoryMap[book.id] = file;
-        index.addContent(book.id, book.content);
+        try {
+            const book = Book.parse(path.join(directory, file));
+            console.log(`Processing ${book.id}...`);
+            directoryMap[book.id] = file;
+            index.addContent(book.id, book.content);
+        } catch (e) {
+            console.error(`Error processing ${file}: ${e.message}`);
+        }
     }
 
+    index.finalizeIndex();
     return { index, directoryMap };
 }
 
@@ -112,14 +161,22 @@ async function main() {
 
     if (!fs.existsSync(outputFolder)) fs.mkdirSync(outputFolder);
 
-    const { index, directoryMap } = await indexLibrary(libraryPath);
+    try {
+        const { index, directoryMap } = await indexLibrary(libraryPath);
 
-    index.printIndex(path.join(outputFolder, "word_index.txt"));
-    fs.writeFileSync(path.join(outputFolder, "book_paths.txt"), Object.entries(directoryMap)
-        .map(([k, v]) => `${k},${v}`)
-        .join("\n"), "utf-8");
+        index.printIndex(path.join(outputFolder, "word_index.txt"));
+        fs.writeFileSync(
+            path.join(outputFolder, "book_paths.txt"),
+            Object.entries(directoryMap)
+                .map(([k, v]) => `${k},${v}`)
+                .join("\n"),
+            "utf-8"
+        );
 
-    console.log("✅ Indexing complete with word counts.");
+        console.log("✅ Indexing complete with clean terms and TF-IDF weights.");
+    } catch (e) {
+        console.error("Indexing failed:", e);
+    }
 }
 
 // main().catch(console.error);
