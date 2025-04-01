@@ -178,5 +178,5 @@ async function main() {
         console.error("Indexing failed:", e);
     }
 }
-
+module.exports = { indexLibrary };
 // main().catch(console.error);
