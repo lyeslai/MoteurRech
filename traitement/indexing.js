@@ -121,5 +121,5 @@ async function main() {
 
     console.log("✅ Indexing complete with word counts.");
 }
-
+module.exports = { indexLibrary };
 // main().catch(console.error);
