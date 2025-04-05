@@ -73,12 +73,15 @@ class Index {
         this.bookTermCounts = {};
     }
 
+    isValidWord(word) {
+        return /^[a-zA-Z]{4,}$/.test(word); // Only words with 4+ letters, no numbers/symbols
+    }
+
     preprocessText(content) {
-        // Simple and effective preprocessing
         return content.toLowerCase()
-            .split(/[^a-zA-Z]+/)
-            .filter(word => word.length > 1) // Keep only words with 2+ letters
-            .map(word => stemmer.stem(word));
+            .split(/[^a-zA-Z]+/) // Split on any non-letter character
+            .filter(word => this.isValidWord(word)) // Apply strict word validation
+            .map(word => stemmer.stem(word)); // Apply stemming
     }
 
     addContent(bookId, content) {
