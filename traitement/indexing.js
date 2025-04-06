@@ -19,9 +19,11 @@ class NodeIndex {
 
     printIndexRec(word = "", output = []) {
         if (Object.keys(this.booksData).length > 0) {
-            output.push(`${word},${Object.entries(this.booksData)
-                .map(([bookId, data]) => `${bookId}:${data.tfidf.toFixed(10)}`)
-                .join("|")}`);
+            if (word.length > 3 && word.length < 10) {
+                output.push(`${word},${Object.entries(this.booksData)
+                    .map(([bookId, data]) => `${bookId}:${data.tfidf.toFixed(6)}`)
+                    .join("|")}`);
+            }
         }
         for (const [char, node] of Object.entries(this.children)) {
             node.printIndexRec(word + char, output);
@@ -74,21 +76,22 @@ class Index {
     }
 
     isValidWord(word) {
-        return /^[a-zA-Z]{4,}$/.test(word); // Only words with 4+ letters, no numbers/symbols
+        return /^[a-zA-Z]{5,10}$/.test(word) && word.length > 3;
     }
 
     preprocessText(content) {
         return content.toLowerCase()
             .split(/[^a-zA-Z]+/) // Split on any non-letter character
-            .filter(word => this.isValidWord(word)) // Apply strict word validation
-            .map(word => stemmer.stem(word)); // Apply stemming
+            .filter(word => this.isValidWord(word) && word.length > 3 && word.length < 10) // Apply strict word validation
+            .map(word => ((word.length > 3 && word.length < 10) ? stemmer.stem(word) : null)) // Stem words with length > 3, otherwise ignore
+            .filter(word => word !== null); // Remove ignored words
     }
 
     addContent(bookId, content) {
         if (!content) return;
 
         const words = this.preprocessText(content);
-        const uniqueTerms = new Set(words);
+        const uniqueTerms = new Set(words.filter(word => word.length > 3 && word.length < 10));
 
         // Update book term count
         this.bookTermCounts[bookId] = (this.bookTermCounts[bookId] || 0) + words.length;
@@ -188,4 +191,4 @@ async function main() {
 }
 module.exports = { indexLibrary };
 
-// main().catch(console.error);
+main().catch(console.error);
