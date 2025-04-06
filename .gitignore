@@ -40,4 +40,3 @@ Thumbs.db
 /data
 *.sqlite
 *.sqlite3
-out/word_index.txt
