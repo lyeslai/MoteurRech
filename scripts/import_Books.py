@@ -152,7 +152,7 @@ async def download_and_save_books(min_word_count=10000, min_books=1000):
 async def main():
     start_time = datetime.now()
     try:
-        await download_and_save_books(100000, 1000)
+        await download_and_save_books(10000, 1664)
     finally:
         client.close()
         end_time = datetime.now()

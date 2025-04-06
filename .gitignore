@@ -3,8 +3,6 @@ node_modules/
 npm-debug.log*
 yarn-error.log*
 
-/node_modules/*
-
 ### 📂 Environnement
 .env
 .env.local
@@ -27,7 +25,6 @@ debug.log
 ### 📂 Cache
 .cache/
 .next/
-out/
 
 ### 📂 IDE / OS
 .vscode/

@@ -16,8 +16,9 @@
     "natural": "^8.0.1",
     "nltk": "^0.0.1",
     "node-stopwords-filter": "^0.0.1",
+    "wordpos": "^2.1.0",
+    "nodemon": "^3.1.9",
     "spacy-nlp": "^1.0.11",
-    "stopword": "^3.1.4",
-    "wordpos": "^2.1.0"
+    "stopword": "^3.1.4"
   }
 }

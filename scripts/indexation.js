@@ -2,90 +2,49 @@ const fs = require("fs");
 const path = require("path");
 const mongoose = require("mongoose");
 const natural = require("natural");
-const stopword = require("stopword");
+const stopwords = require("stopword");
+const Book = require("../models/Book");
 require("dotenv").config();
 
-// Connexion MongoDB
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log("✅ Connecté à MongoDB"))
-  .catch(err => console.error("❌ Erreur de connexion à MongoDB:", err));
-
-// Définition des modèles Mongoose
-const Book = mongoose.model("Book", new mongoose.Schema({
-  gutendex_id: Number,
-  contentPath: String
-}, { collection: "books" })); // Collection "books"
+mongoose.connect(process.env.MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
 
 const tokenizer = new natural.WordTokenizer();
-const lemmatizer = natural.PorterStemmer;
+const lemmatizer = new natural.WordNetLemmatizer(); // ✅ Ajout de la lemmatisation
 const indexCollection = mongoose.connection.collection("index");
 
-const BOOKS_DIR = path.join(__dirname, "../books");
-const BATCH_SIZE = 5000;
-
-// 🔹 Récupérer les livres déjà indexés
-async function getIndexedBooks() {
-  const indexedDocs = await indexCollection.find({}, { projection: { books: 1 } }).toArray();
-  const indexedBooks = new Set();
-
-  indexedDocs.forEach(doc => {
-    Object.keys(doc.books).forEach(bookId => indexedBooks.add(bookId));
-  });
-
-  return indexedBooks;
-}
-
-// Vérification avancée d'un mot
-const isValidWord = (word) => {
-  return (
-    word.length > 3 &&
-    /^[a-zA-Z]+$/.test(word) &&
-    stopword.removeStopwords([word]).length !== 0
-  );
-};
+// ✅ Filtrage strict des mots
+const isValidWord = (word) => /^[a-zA-Z]{4,}$/.test(word); // Exclut nombres, symboles, et mots courts
 
 async function indexBooks() {
   console.log("🔍 Début de l'indexation...");
+  const { deletedCount } = await indexCollection.deleteMany({});
+  console.log(`🗑️ Suppression des anciens index : ${deletedCount} documents supprimés`);
 
-  const books = await Book.find({}).lean().exec();
-  const bookMap = {}; 
-  books.forEach(book => {
-    const normalizedPath = path.basename(book.contentPath); // 🔥 Extrait juste "book_XXXX.txt"
-    bookMap[normalizedPath] = book.gutendexId; // 🔹 Utilise gutendexId au lieu de gutendex_id
-  });
-  
-  console.log("📌 Vérification des fichiers trouvés dans MongoDB:", Object.keys(bookMap).slice(0, 10)); // 🔍 Log pour test
-  
+  const books = await Book.find({});
+  console.log(`📚 Nombre de livres trouvés : ${books.length}`);
 
-  const indexedBooks = await getIndexedBooks();
-  console.log(`📌 ${indexedBooks.size} livres déjà indexés, on reprend à partir du dernier.`);
+  let batchUpdates = [];
+  let wordIndex = {};
 
-  let batch = [];
-
-  for (let bookFile of fs.readdirSync(BOOKS_DIR).filter(file => file.endsWith(".txt"))) {
-    const bookId = bookMap[bookFile];
-
-    if (!bookId) {
-      console.warn(`⚠️ Aucun gutendex_id trouvé pour ${bookFile}`);
-      continue;
-    }
-
-    if (indexedBooks.has(bookId.toString())) {
-      console.log(`🔄 Livre déjà indexé, on passe : ${bookFile}`);
-      continue;
-    }
-
-    const filePath = path.join(BOOKS_DIR, bookFile);
-
+  for (let book of books) {
     try {
-      console.log(`📖 Traitement du livre : ${bookFile} (ID: ${bookId})`);
+      const filePath = path.join(__dirname, "..", book.contentPath);
+      if (!fs.existsSync(filePath)) {
+        console.error(`❌ Fichier introuvable: ${filePath}`);
+        continue;
+      }
 
-      const wordCounts = {};
       const stream = fs.createReadStream(filePath, { encoding: "utf8" });
+
+      let wordCounts = {};
 
       for await (const chunk of stream) {
         let words = tokenizer.tokenize(chunk.toLowerCase());
-        words = words.filter(isValidWord).map(word => lemmatizer.stem(word));
+        words = stopwords.removeStopwords(words); // ✅ Suppression des stopwords
+        words = words.filter(isValidWord).map(lemmatizer.lemmatize); // ✅ Filtrage + Lemmatisation
 
         words.forEach((word) => {
           if (!wordCounts[word]) wordCounts[word] = 0;
@@ -93,43 +52,47 @@ async function indexBooks() {
         });
       }
 
-      Object.entries(wordCounts).forEach(([word, count]) => {
-        if (count >= 10) {
-          batch.push({
-            updateOne: {
-              filter: { word },
-              update: { $set: { [`books.${bookId}`]: count } },
-              upsert: true
-            }
-          });
-        }
-      });
-
-      console.log(`✅ Livre indexé : ${bookFile} (${Object.keys(wordCounts).length} mots uniques)`);
-
-      if (batch.length >= BATCH_SIZE) {
-        await indexCollection.bulkWrite(batch, { ordered: false });
-        console.log("📤 Batch inséré dans MongoDB !");
-        batch = [];
+      // ✅ Stocker les mots-clés en mémoire pour éviter les ralentissements
+      for (const [word, count] of Object.entries(wordCounts)) {
+        if (!wordIndex[word]) wordIndex[word] = {};
+        wordIndex[word][book._id] = count;
       }
 
-      // Permet d'éviter de bloquer l'event loop (utile pour un très gros dataset)
-      await new Promise(resolve => setTimeout(resolve, 0));
-      
+      console.log(`✅ Livre indexé : ${book.title} (${Object.keys(wordCounts).length} mots uniques)`);
+
+      // ✅ Insérer en bulk après 5000 mots stockés en mémoire
+      if (Object.keys(wordIndex).length > 5000) {
+        await insertBatch(wordIndex);
+        wordIndex = {};
+      }
+
     } catch (err) {
-      console.error(`❌ Erreur sur ${bookFile}:`, err);
+      console.error(`❌ Erreur sur ${book.title}:`, err);
     }
   }
 
-  if (batch.length > 0) {
-    await indexCollection.bulkWrite(batch, { ordered: false });
-    console.log("📤 Dernier batch inséré !");
+  // ✅ Dernier batch à insérer
+  if (Object.keys(wordIndex).length > 0) {
+    await insertBatch(wordIndex);
   }
 
-  const indexedCount = await indexCollection.countDocuments();
-  console.log(`✅ Indexation terminée ! ${indexedCount} mots indexés.`);
+  console.log(`✅ Indexation terminée ! ${await indexCollection.countDocuments()} mots indexés.`);
   mongoose.connection.close();
 }
 
-// Lancer l'indexation
-indexBooks().catch((err) => console.error("❌ Erreur:", err));
+// ✅ Insertion optimisée en MongoDB avec `bulkWrite`
+async function insertBatch(wordIndex) {
+  const bulkOps = Object.entries(wordIndex).map(([word, books]) => ({
+    updateOne: {
+      filter: { word },
+      update: { $set: { books } },
+      upsert: true, // ✅ Ajoute si ça n'existe pas
+    },
+  }));
+
+  await indexCollection.bulkWrite(bulkOps);
+  console.log(`📤 Batch de ${bulkOps.length} mots inséré dans MongoDB !`);
+}
+
+// 🚀 Lancer l'indexation
+// indexBooks().catch((err) => console.error("❌ Erreur:", err));

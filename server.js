@@ -2,7 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
-const booksRoutes = require("./routes/books");
+const IndexedBooks = require("./routes/bookController");
 
 const app = express();
 app.use(express.json());
@@ -26,7 +26,7 @@ mongoose.connect(process.env.MONGODB_URI, {
     .catch(err => console.error("❌ Erreur lors de la récupération des collections :", err));
 }).catch(err => console.error("❌ Erreur MongoDB :", err));
 
-app.use("/api/books", booksRoutes);
+app.use("/api/books", IndexedBooks);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Serveur démarré sur le port ${PORT}`));
