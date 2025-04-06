@@ -154,13 +154,16 @@ async function indexLibrary(directory) {
         try {
             const book = Book.parse(path.join(directory, file));
             console.log(`Processing book number ${processedBooks + 1} with ID: ${book.id}...`);
-            directoryMap[book.id] = file;
-            index.addContent(book.id, book.content);
-            processedBooks++;
+            if (book.id != 0) {
+                directoryMap[book.id] = file;
+                index.addContent(book.id, book.content);
+                processedBooks++;
+            }
         } catch (e) {
             console.error(`Error processing ${file}: ${e.message}`);
         }
     }
+    console.log(`Processed ${processedBooks} books, now passing to TF-IDF calculation...`);
 
     index.finalizeIndex();
     return { index, directoryMap };
@@ -191,4 +194,4 @@ async function main() {
 }
 module.exports = { indexLibrary };
 
-main().catch(console.error);
+// main().catch(console.error);

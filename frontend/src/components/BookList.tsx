@@ -64,27 +64,29 @@ const BookList: React.FC<BookListProps> = ({
     const totalPages = Math.ceil(totalBooks / booksPerPage);
 
     return (
-        <div className="container mx-auto my-4 p-4">
+        <div className="container mx-auto my-3 p-6">
             {displaySort && (
-                <div className="flex justify-start items-center gap-6 p-4 mb-4 bg-gray-800 max-w-fit rounded-md text-white">
-                    <label className="font-semibold">Sort by:</label>
-                    <select
-                        className="border px-2 py-1 rounded bg-gray-800"
-                        value={selectedSort}
-                        onChange={(e) => setSelectedSort(e.target.value)}
-                    >
-                        <option value="relevance">Relevance</option>
-                        <option value="title">Title</option>
-                        <option value="author">Author</option>
-                        <option value="date">Date</option>
-                    </select>
+                <div>
+                    <div className="flex justify-start items-center gap-6 p-4 mb-4 bg-gray-800 max-w-fit rounded-md text-white">
+                        <label className="font-semibold">Sort by:</label>
+                        <select
+                            className="border px-2 py-1 rounded bg-gray-800"
+                            value={selectedSort}
+                            onChange={(e) => setSelectedSort(e.target.value)}
+                        >
+                            <option value="relevance">Relevance</option>
+                            <option value="title">Title</option>
+                            <option value="author">Author</option>
+                            <option value="date">Date</option>
+                        </select>
 
-                    <button
-                        className="text-black border px-2 py-1 rounded bg-gray-200"
-                        onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
-                    >
-                        {sortOrder === "asc" ? "Ascending" : "Descending"}
-                    </button>
+                        <button
+                            className="text-black border px-2 py-1 rounded bg-gray-200"
+                            onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
+                        >
+                            {sortOrder === "asc" ? "Ascending" : "Descending"}
+                        </button>
+                    </div>
                 </div>
             )}
 

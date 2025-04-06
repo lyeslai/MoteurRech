@@ -95,4 +95,4 @@ async function insertBatch(wordIndex) {
 }
 
 // 🚀 Lancer l'indexation
-indexBooks().catch((err) => console.error("❌ Erreur:", err));
+// indexBooks().catch((err) => console.error("❌ Erreur:", err));

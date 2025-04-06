@@ -14,7 +14,9 @@ function splitPattern(pattern, type) {
     if (type === 'regex') {
         return [pattern]; // Return the entire pattern as a single keyword for regex search
     } else {
-        return pattern.split(/[^\p{L}\p{Nd}]+/u);
+        return pattern
+            .split(/[^\p{L}\p{Nd}]+/u)
+            .filter(keyword => keyword.length > 3);
     }
 }
 
@@ -86,6 +88,12 @@ function searchDir(pattern, type, metadata, wordsIndex, bookPaths) {
         const result = new Map();
 
         if (!pattern.includes('|')) {
+            if (m1.size === 0) {
+                return m2;
+            }
+            if (m2.size === 0) {
+                return m1;
+            }
             // Intersection
             m1.forEach((occ1, bookId) => {
                 if (m2.has(bookId)) {
@@ -123,7 +131,7 @@ function searchDir(pattern, type, metadata, wordsIndex, bookPaths) {
                 const bookPath = bookPaths[bookId]; // Access book path using bracket notation
                 if (!bookPath) return false; // Skip if book path is not found
                 const content = fs.readFileSync(`books/${bookPath}`, 'utf8');
-                return kmpMatch(pattern.toLowerCase(), content.toLowerCase()) !== -1;
+                return kmpMatch(pattern, content) !== -1;
             })
             .map(([bookId, occ]) => {
                 const book = metadata.find(b => b.id === bookId);

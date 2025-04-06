@@ -9,6 +9,7 @@ interface SearchBarProps {
 const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
     const [pattern, setPattern] = useState("");
     const [type, setType] = useState<"keyword" | "regex" | "kmp">("keyword");
+    const [totalBooks, setTotalBooks] = useState(0);
 
     const handleSearch = async (query: string, searchType: "keyword" | "regex" | "kmp") => {
         if (!query.trim()) {
@@ -22,6 +23,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
                 type: searchType,
             });
             onSearch(response.data);
+            setTotalBooks(response.data.length);
         } catch (error) {
             console.error("Error searching books:", error);
         }
@@ -55,7 +57,13 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
                     <option value="regex">Regex</option>
                     <option value="kmp">KMP</option>
                 </select>
+
             </div>
+            {totalBooks > 0 && totalBooks < 1500 &&
+                <div className="text-white text-2xl font-extrabold mb-4">
+                    {totalBooks} book{totalBooks !== 1 ? "s" : ""} found
+                </div>
+            }
         </div>
     );
 };

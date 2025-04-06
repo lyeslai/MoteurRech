@@ -36,12 +36,13 @@ const App: React.FC = () => {
 
   const handleSearch = (results: SearchResult[]) => {
     setSearchResults(results);
+    setTotalBooks(results.length);
   };
 
   return (
     <Router>
       <div className="mx-auto flex flex-col items-center">
-        <div className="min-w-full bg-gray-800 p-4 mb-8">
+        <div className="min-w-full bg-gray-800 p-4">
           <div className="px-44 flex flex-col justify-center items-center">
             <h1
               className="text-3xl text-white font-bold mb-8 cursor-pointer"
@@ -49,25 +50,33 @@ const App: React.FC = () => {
             >
               Book Search App
             </h1>
-            <SearchBar onSearch={handleSearch} />
           </div>
         </div>
         <Routes>
           <Route
             path="/"
             element={
-              <div className="container">
+              <div className="min-w-full flex flex-col items-center justify-center">
                 {loading ? (
                   <Spinner />
                 ) : (
-                  <BookList
-                    books={searchResults.length > 0 ? searchResults : books}
-                    onBookClick={(id) => (window.location.href = `/book/${id}`)}
-                    displaySort={true}
-                    currentPage={currentPage}
-                    setCurrentPage={setCurrentPage}
-                    totalBooks={totalBooks}
-                  />
+                  <>
+                    <div className="min-w-full bg-gray-800 flex flex-col items-center justify-center">
+                      <div className="w-[80%]">
+                        <SearchBar onSearch={handleSearch} />
+                      </div>
+                    </div>
+                    <div className="container mx-auto my-4 p-4">
+                      <BookList
+                        books={searchResults.length > 0 ? searchResults : books}
+                        onBookClick={(id) => (window.location.href = `/book/${id}`)}
+                        displaySort={true}
+                        currentPage={currentPage}
+                        setCurrentPage={setCurrentPage}
+                        totalBooks={totalBooks}
+                      />
+                    </div>
+                  </>
                 )}
               </div>
             }
