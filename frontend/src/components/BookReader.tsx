@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Book } from "../types";
 import HTMLFlipBook from "react-pageflip";
+import { FaArrowAltCircleRight, FaArrowCircleLeft } from "react-icons/fa";
 
 interface BookReaderProps {
     book: Book;
@@ -16,7 +17,7 @@ const BookReader: React.FC<BookReaderProps> = ({ book }) => {
     useEffect(() => {
         if (book.content) {
             const lines = book.content.split("\n");
-            const charactersPerLine = isMobile ? 42 : 70; // Fewer characters per line on mobile
+            const charactersPerLine = isMobile ? 42 : 73; // Fewer characters per line on mobile
             const linesPerPage = isMobile ? 12 : 24; // Fewer lines per page on mobile
             const pagesArray = [];
 
@@ -69,9 +70,9 @@ const BookReader: React.FC<BookReaderProps> = ({ book }) => {
     };
 
     return (
-        <div className="flex flex-col justify-center items-start bg-gray-600 p-4 md:p-6">
+        <div className="flex flex-col justify-center items-start bg-gray-600 p-4 md:p-6 rounded-md">
             <div className="container text-start">
-                <h1 className="text-2xl md:text-4xl font-bold text-center mb-4">{book.title}</h1>
+                <h1 className="text-2xl md:text-5xl font-bold text-center mb-4 text-white">{book.title}</h1>
             </div>
             <div className="flex flex-col md:flex-row items-center justify-center w-full max-w-none mx-auto relative overflow-hidden">
 
@@ -81,7 +82,7 @@ const BookReader: React.FC<BookReaderProps> = ({ book }) => {
                     disabled={currentPage === 0}
                     className="bg-[#6d4c41] text-white px-4 py-2 rounded-lg hover:bg-[#5a3c32] transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed mb-4 md:mb-0 md:mr-4"
                 >
-                    ←
+                    <FaArrowCircleLeft />
                 </button>
 
                 {/* Book Container */}
@@ -112,7 +113,7 @@ const BookReader: React.FC<BookReaderProps> = ({ book }) => {
                     disabled={currentPage >= pages.length - 1}
                     className="bg-[#6d4c41] text-white px-4 py-2 rounded-lg hover:bg-[#5a3c32] transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed mt-4 md:mt-0 md:ml-4"
                 >
-                    →
+                    <FaArrowAltCircleRight />
                 </button>
             </div>
         </div>

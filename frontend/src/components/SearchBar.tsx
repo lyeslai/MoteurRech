@@ -49,7 +49,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
                         setType(newType);
                         handleSearch(pattern, newType);
                     }}
-                    className="p-2 border border-gray-300 rounded-lg text-white"
+                    className="p-2 border border-gray-300 rounded-lg text-white bg-gray-800"
                 >
                     <option value="keyword">Keyword</option>
                     <option value="regex">Regex</option>

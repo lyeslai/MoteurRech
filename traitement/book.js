@@ -84,6 +84,8 @@ class Book {
             }
         }
 
+        i = lines.findIndex(line => line.includes("START OF THE PROJECT GUTENBERG EBOOK") || line.includes("START OF THIS PROJECT GUTENBERG EBOOK"));
+
         // Extract the content
         const content = lines
             .slice(i)

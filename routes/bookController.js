@@ -32,11 +32,27 @@ const bookJson = (book, occurrence = 0) => ({
     occurrence: occurrence,
 });
 
-// Get list of books
+// Get list of books with pagination
 router.get("/books", (req, res) => {
-    const books = BookData.metadata.map((book) => bookJson(book, 0));
-    res.json(books);
+    const page = parseInt(req.query.page) || 1; // default to page 1
+    const limit = parseInt(req.query.limit) || 9; // default to 9 items per page
+
+    const books = BookData.metadata
+        .filter((book) => book.id != -1) // filter out invalid books
+        .map((book) => bookJson(book, 0));
+
+    // Get the subset of books based on page and limit
+    const startIndex = (page - 1) * limit;
+    const endIndex = page * limit;
+
+    const paginatedBooks = books.slice(startIndex, endIndex);
+
+    res.json({
+        books: paginatedBooks,
+        totalBooks: books.length, // total number of books for pagination info
+    });
 });
+
 
 // Get content of a specific book
 router.get("/book/:bookId", (req, res) => {

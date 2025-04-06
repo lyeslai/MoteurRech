@@ -6,17 +6,29 @@ interface BookListProps {
     books: Book[] | SearchResult[];
     onBookClick: (id: number) => void;
     displaySort?: boolean;
+    currentPage: number;
+    setCurrentPage: (page: number) => void;
+    totalBooks: number;
 }
 
-const BookList: React.FC<BookListProps> = ({ books, onBookClick, displaySort = false }) => {
-    console.log(books);
-
+const BookList: React.FC<BookListProps> = ({
+    books,
+    onBookClick,
+    displaySort = false,
+    currentPage,
+    setCurrentPage,
+    totalBooks,
+}) => {
     const [selectedSort, setSelectedSort] = useState<string>("relevance");
     const [sortOrder, setSortOrder] = useState<string>("asc");
+    const booksPerPage = 9; // Set items per page
 
     const sortBooks = (books: (Book | SearchResult)[]) => {
+        const validBooks = books.filter((book) => book && typeof book === "object");
+
         const order = sortOrder === "asc" ? 1 : -1;
-        return [...books].sort((a, b) => {
+
+        return [...validBooks].sort((a, b) => {
             if ("occurrence" in a && "occurrence" in b) {
                 if (selectedSort === "relevance") {
                     if (a.occurrence === b.occurrence) {
@@ -48,38 +60,67 @@ const BookList: React.FC<BookListProps> = ({ books, onBookClick, displaySort = f
         });
     };
 
+    const sortedBooks = sortBooks(books);
+    const totalPages = Math.ceil(totalBooks / booksPerPage);
+
     return (
-        <div>
-            {/* Sorting Controls */}
-            {displaySort && <div className="flex justify-start items-center gap-6 p-4 mb-4 bg-gray-800 max-w-fit rounded-md text-white">
-                <label className="font-semibold">Sort by:</label>
-                <select
-                    className="border px-2 py-1 rounded bg-gray-800"
-                    value={selectedSort}
-                    onChange={(e) => setSelectedSort(e.target.value)}
-                >
-                    <option value="relevance">Relevance</option>
-                    <option value="title">Title</option>
-                    <option value="author">Author</option>
-                    <option value="date">Date</option>
-                </select>
+        <div className="container mx-auto my-4 p-4">
+            {displaySort && (
+                <div className="flex justify-start items-center gap-6 p-4 mb-4 bg-gray-800 max-w-fit rounded-md text-white">
+                    <label className="font-semibold">Sort by:</label>
+                    <select
+                        className="border px-2 py-1 rounded bg-gray-800"
+                        value={selectedSort}
+                        onChange={(e) => setSelectedSort(e.target.value)}
+                    >
+                        <option value="relevance">Relevance</option>
+                        <option value="title">Title</option>
+                        <option value="author">Author</option>
+                        <option value="date">Date</option>
+                    </select>
 
-                <button
-                    className="text-black border px-2 py-1 rounded bg-gray-200"
-                    onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
-                >
-                    {sortOrder === "asc" ? "Ascending" : "Descending"}
-                </button>
-            </div>}
+                    <button
+                        className="text-black border px-2 py-1 rounded bg-gray-200"
+                        onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
+                    >
+                        {sortOrder === "asc" ? "Ascending" : "Descending"}
+                    </button>
+                </div>
+            )}
 
-            {/* Sorted Book List */}
             <div className="min-w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {sortBooks(books).map((book) => (
-                    "id" in book && (
+                {sortedBooks.map((book) =>
+                    "id" in book ? (
                         <BookCard key={book.id} book={book} onBookClick={onBookClick} />
-                    )
-                ))}
+                    ) : null
+                )}
             </div>
+
+            {totalPages > 1 && (
+                <div className="w-full flex justify-center">
+                    <div className="flex justify-center items-center gap-4 mt-8 bg-gray-800 max-w-fit rounded-md p-4 text-white">
+                        <button
+                            className="px-4 py-2 bg-gray-600 text-white rounded disabled:opacity-50 cursor-pointer"
+                            onClick={() => setCurrentPage(currentPage > 1 ? currentPage - 1 : 1)}
+                            disabled={currentPage === 1}
+                        >
+                            Previous
+                        </button>
+
+                        <span className="text-lg font-semibold">
+                            Page {currentPage} of {totalPages}
+                        </span>
+
+                        <button
+                            className="px-4 py-2 bg-gray-600 text-white rounded disabled:opacity-50 cursor-pointer"
+                            onClick={() => setCurrentPage(currentPage < totalPages ? currentPage + 1 : totalPages)}
+                            disabled={currentPage === totalPages}
+                        >
+                            Next
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
